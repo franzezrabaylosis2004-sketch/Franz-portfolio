@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Franz Ezra C. Baylosis – Portfolio</title>
+      <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+      <!-- Navigation -->
+      <nav class="top-nav">
+        <div class="nav-wrap">
+          <div class="nav-inner">
+            <div class="brand">Franz Baylosis</div>
+            <ul class="nav-links">
+              <li><a href="#about">About</a></li>
+              <li><a href="#skills">Skills</a></li>
+              <li><a href="#grades">Grades</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <div class="site-wrap">
+        <div class="container">
+          <main>
+          <header class="hero">
+            <h1>Franz Ezra C. Baylosis</h1>
+            <h2>BSCS-3 Student Athlete | UI/UX Enthusiast</h2>
+            <a href="https://m.me/franz.baylosis" class="btn">Hire Me</a>
+          </header>
+
+          <section id="about">
+            <h3>About Me</h3>
+            <p>I’m a 3rd year Bachelor of Science in Computer student and a student athlete at De La Salle John Bosco College with a passion for building intuitive, user-focused interfaces through UI/UX design. Outside tech, I play volleyball and enjoy online games—both sharpen my teamwork, strategy, and focus which I bring into every project.</p>
+          </section>
+
+          <section id="skills">
+            <h3>Skills</h3>
+            <div class="skills">
+              <div class="skill">UI/UX Design</div>
+              <div class="skill">Web Development</div>
+              <div class="skill">Database Management</div>
+              <div class="skill">Graphic Design</div>
+            </div>
+          </section>
+
+          <div class="quote">“Dream big, work hard, and never stop believing in yourself.”</div>
+
+          <section id="grades" class="grades-card" aria-label="My Grade">
+            <h3 class="grades-title">📊 MY GRADES</h3>
+            <p id="grade-status" class="grades-status loading">Loading your grade…</p>
+
+            <div id="grade-result" class="grade-card" hidden>
+              <p><strong>Student ID:</strong> <span id="g-id"></span></p>
+              <p><strong>Last Name:</strong> <span id="g-ln"></span></p>
+              <p><strong>Midterm:</strong> <span id="g-mid"></span></p>
+              <p><strong>Final:</strong> <span id="g-fin"></span></p>
+            </div>
+
+            <button id="download-grades" class="btn small" hidden>📥 Download My Grades</button>
+
+            <div class="grades-src">Source: <a href="http://class-grades-cs.mywebcommunity.org/grades_api.php" target="_blank" rel="noopener noreferrer">class-grades-cs.mywebcommunity.org</a></div>
+          </section>
+
+        </main>
+
+        <aside>
+          <div class="profile-pic">
+              <img src="franz.jpg" alt="Franz Ezra C. Baylosis" />
+          </div>
+
+          <section id="contact" class="contact">
+            <h3>Contact Me</h3>
+            <p>📱 09934838019<br>📧 franzezrabaylosis2004@gmail.com<br><a href="https://www.facebook.com/Baylosisfranz">Facebook</a></p>
+          </section>
+
+          <footer>© 2025 Franz Ezra C. Baylosis</footer>
+        </aside>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const API_URL = 'http://class-grades-cs.mywebcommunity.org/grades_api.php';
+          const DEFAULT_ID = '2340108';
+
+          const PROXIES = [
+            (u) => 'https://r.jina.ai/http/' + u.replace(/^https?:\/\//, ''),
+            (u) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+          ];
+
+          const statusEl = document.getElementById('grade-status');
+          const resultEl = document.getElementById('grade-result');
+          const idEl = document.getElementById('g-id');
+          const lnEl = document.getElementById('g-ln');
+          const midEl = document.getElementById('g-mid');
+          const finEl = document.getElementById('g-fin');
+          const dlBtn = document.getElementById('download-grades');
+
+          let lastRecord = null;
+
+          document.addEventListener('DOMContentLoaded', () => {
+            dlBtn.addEventListener('click', downloadCurrent);
+            loadById(DEFAULT_ID);
+          });
+
+          async function loadById(studentId) {
+            try {
+              statusEl.classList.add('loading');
+              statusEl.textContent = 'Fetching grade for ID ' + studentId + ' ...';
+              resultEl.hidden = true;
+              dlBtn.hidden = true;
+              lastRecord = null;
+
+              const xmlText = await fetchWithFallbacks(API_URL);
+              const rec = pickRecordFromXML(xmlText, studentId);
+              if (!rec) {
+                statusEl.classList.remove('loading');
+                statusEl.textContent = '⚠️ No record found for ID ' + studentId;
+                return;
+              }
+
+              idEl.textContent = rec.id;
+              lnEl.textContent = rec.ln;
+              midEl.textContent = rec.mid;
+              finEl.textContent = rec.fin;
+
+              lastRecord = rec;
+              resultEl.hidden = false;
+              dlBtn.hidden = false;
+              statusEl.classList.remove('loading');
+              statusEl.textContent = '✅ Grade loaded for ' + studentId + '!';
+            } catch (e) {
+              console.error(e);
+              statusEl.classList.remove('loading');
+              statusEl.textContent = '❌ Failed to fetch. Check connection.';
+            }
+          }
+
+          async function fetchWithFallbacks(url) {
+            try {
+              const r = await fetch(url, { headers: { Accept: 'application/xml,text/xml,application/json' } });
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return await r.text();
+            } catch (_) {
+              for (const make of PROXIES) {
+                try {
+                  const prox = make(url);
+                  const r2 = await fetch(prox, { headers: { Accept: 'text/plain,text/xml,application/xml' } });
+                  if (!r2.ok) throw new Error('HTTP ' + r2.status);
+                  return await r2.text();
+                } catch (_) {}
+              }
+              throw new Error('All fetch attempts failed');
+            }
+          }
+
+          function pickRecordFromXML(xmlText, idWanted) {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(xmlText, 'application/xml');
+            if (xml.querySelector('parsererror')) return null;
+
+            const students = xml.getElementsByTagName('student');
+            for (let i = 0; i < students.length; i++) {
+              const id = tag(students[i], 'student_id');
+              if (String(id).trim() === String(idWanted).trim()) {
+                return {
+                  id,
+                  ln: tag(students[i], 'student_lastname'),
+                  mid: tag(students[i], 'midterm_grade'),
+                  fin: tag(students[i], 'final_grade'),
+                };
+              }
+            }
+            return null;
+
+            function tag(parent, t) {
+              const el = parent.getElementsByTagName(t)[0];
+              return el ? (el.textContent || '').trim() : '';
+            }
+          }
+
+          function downloadCurrent() {
+            if (!lastRecord) return;
+            const content = `📊 GRADES\nStudent ID: ${lastRecord.id}\nLast Name: ${lastRecord.ln}\nMidterm: ${lastRecord.mid}\nFinal: ${lastRecord.fin}\nSource: ${API_URL}`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `grades_${lastRecord.id}.txt`;
+            link.click();
+          }
+        })();
+      </script>
+
+      <!-- navigation scroll behavior: keep nav visible without overlapping content -->
+      <script>
+        (function(){
+          const nav = document.querySelector('.top-nav');
+          if(!nav) return;
+          const threshold = 40;
+          let isScrolled = false;
+
+          function update(){
+            if(window.scrollY > threshold){
+              if(!isScrolled){
+                nav.classList.add('scrolled');
+                isScrolled = true;
+              }
+            } else {
+              if(isScrolled){
+                nav.classList.remove('scrolled');
+                isScrolled = false;
+              }
+            }
+          }
+
+          // smooth scroll behavior for anchor links; briefly reveal nav when jumping
+          document.querySelectorAll('.top-nav a[href^="#"]').forEach(a => {
+            a.addEventListener('click', function(ev){
+              ev.preventDefault();
+              const id = this.getAttribute('href').slice(1);
+              const target = document.getElementById(id);
+              if(target){
+                // reveal nav so user sees it's active, then smooth scroll
+                nav.classList.add('scrolled');
+                setTimeout(()=>{
+                  target.scrollIntoView({behavior:'smooth',block:'start'});
+                }, 50);
+              }
+            });
+          });
+
+          window.addEventListener('scroll', update, {passive:true});
+          document.addEventListener('DOMContentLoaded', update);
+        })();
+      </script>
+    </body>
+  </html>
+ 
